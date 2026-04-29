@@ -1,0 +1,513 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Mein Budget</title>
+  <style>
+    :root {
+      --bg: #f4f6f8;
+      --card: #ffffff;
+      --text: #1f2937;
+      --muted: #6b7280;
+      --border: #e5e7eb;
+      --danger: #b91c1c;
+      --ok: #047857;
+      --warn: #b45309;
+      --primary: #2563eb;
+      --primary-dark: #1d4ed8;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.4;
+    }
+
+    .app {
+      width: min(720px, 100%);
+      margin: 0 auto;
+      padding: 16px;
+    }
+
+    header {
+      padding: 14px 0 8px;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 1.7rem;
+      letter-spacing: -0.03em;
+    }
+
+    .hint {
+      margin: 6px 0 0;
+      color: var(--muted);
+      font-size: 0.95rem;
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 16px;
+      margin: 14px 0;
+      box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
+    }
+
+    label {
+      display: block;
+      margin-bottom: 6px;
+      font-weight: 650;
+      font-size: 0.95rem;
+    }
+
+    input, select, button {
+      width: 100%;
+      font: inherit;
+      border-radius: 12px;
+    }
+
+    input, select {
+      border: 1px solid var(--border);
+      padding: 12px;
+      background: #fff;
+      color: var(--text);
+    }
+
+    input:focus, select:focus {
+      outline: 3px solid rgba(37, 99, 235, 0.18);
+      border-color: var(--primary);
+    }
+
+    button {
+      border: none;
+      padding: 12px 14px;
+      font-weight: 700;
+      cursor: pointer;
+      background: var(--primary);
+      color: #fff;
+    }
+
+    button:hover { background: var(--primary-dark); }
+
+    button.secondary {
+      background: #eef2ff;
+      color: #1e3a8a;
+    }
+
+    button.secondary:hover { background: #dbeafe; }
+
+    button.danger {
+      background: #fee2e2;
+      color: var(--danger);
+    }
+
+    button.danger:hover { background: #fecaca; }
+
+    .grid {
+      display: grid;
+      gap: 12px;
+    }
+
+    @media (min-width: 640px) {
+      .grid.two { grid-template-columns: 1fr 1fr; }
+      .grid.three { grid-template-columns: 1fr 1fr 1fr; }
+    }
+
+    .summary {
+      display: grid;
+      gap: 12px;
+      grid-template-columns: 1fr;
+    }
+
+    @media (min-width: 560px) {
+      .summary { grid-template-columns: repeat(3, 1fr); }
+    }
+
+    .metric {
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 14px;
+      background: #fbfdff;
+    }
+
+    .metric span {
+      display: block;
+      color: var(--muted);
+      font-size: 0.85rem;
+      margin-bottom: 4px;
+    }
+
+    .metric strong {
+      display: block;
+      font-size: 1.35rem;
+      letter-spacing: -0.03em;
+    }
+
+    .remaining.good strong { color: var(--ok); }
+    .remaining.warning strong { color: var(--warn); }
+    .remaining.bad strong { color: var(--danger); }
+
+    .category-list {
+      display: grid;
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .category-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 10px 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .category-row:last-child { border-bottom: none; }
+    .category-row .name { font-weight: 650; }
+    .category-row .amount { font-variant-numeric: tabular-nums; }
+
+    .expense-list {
+      display: grid;
+      gap: 10px;
+      margin-top: 10px;
+    }
+
+    .expense-item {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 8px;
+      align-items: center;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 12px;
+      background: #fff;
+    }
+
+    .expense-title {
+      font-weight: 700;
+      margin-bottom: 3px;
+    }
+
+    .expense-meta {
+      color: var(--muted);
+      font-size: 0.88rem;
+    }
+
+    .expense-amount {
+      font-weight: 800;
+      font-variant-numeric: tabular-nums;
+      text-align: right;
+    }
+
+    .delete-small {
+      width: auto;
+      padding: 8px 10px;
+      border-radius: 10px;
+      font-size: 0.85rem;
+      background: #fee2e2;
+      color: var(--danger);
+      margin-top: 6px;
+    }
+
+    .empty {
+      color: var(--muted);
+      border: 1px dashed var(--border);
+      border-radius: 14px;
+      padding: 14px;
+      background: #fafafa;
+    }
+
+    .footer-actions {
+      display: grid;
+      gap: 10px;
+      margin-top: 12px;
+    }
+
+    @media (min-width: 560px) {
+      .footer-actions { grid-template-columns: 1fr 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <header>
+      <h1>Mein Budget</h1>
+      <p class="hint">Alle Ausgaben werden automatisch vom Budget abgezogen.</p>
+    </header>
+
+    <section class="card" aria-labelledby="budget-title">
+      <h2 id="budget-title">Budget</h2>
+      <label for="budgetInput">Startbudget in Euro</label>
+      <input id="budgetInput" inputmode="decimal" type="text" value="937,14" />
+    </section>
+
+    <section class="card" aria-labelledby="summary-title">
+      <h2 id="summary-title">Übersicht</h2>
+      <div class="summary">
+        <div class="metric">
+          <span>Budget</span>
+          <strong id="budgetDisplay">937,14 €</strong>
+        </div>
+        <div class="metric">
+          <span>Ausgegeben</span>
+          <strong id="spentDisplay">0,00 €</strong>
+        </div>
+        <div class="metric remaining good" id="remainingBox">
+          <span>Restbudget</span>
+          <strong id="remainingDisplay">937,14 €</strong>
+        </div>
+      </div>
+    </section>
+
+    <section class="card" aria-labelledby="add-title">
+      <h2 id="add-title">Ausgabe hinzufügen</h2>
+      <form id="expenseForm" class="grid">
+        <div class="grid two">
+          <div>
+            <label for="categoryInput">Kategorie</label>
+            <select id="categoryInput" required>
+              <option>Supermarkt</option>
+              <option>Drogerie</option>
+              <option>Restaurant/Bäcker</option>
+              <option>Baumarkt</option>
+              <option>Sonstiges</option>
+            </select>
+          </div>
+          <div>
+            <label for="amountInput">Betrag in Euro</label>
+            <input id="amountInput" inputmode="decimal" type="text" placeholder="z. B. 12,50" required />
+          </div>
+        </div>
+        <div>
+          <label for="noteInput">Notiz optional</label>
+          <input id="noteInput" type="text" placeholder="z. B. Rewe, dm, Bäcker ..." />
+        </div>
+        <button type="submit">Vom Budget abziehen</button>
+      </form>
+    </section>
+
+    <section class="card" aria-labelledby="categories-title">
+      <h2 id="categories-title">Ausgaben nach Kategorie</h2>
+      <div id="categoryTotals" class="category-list"></div>
+    </section>
+
+    <section class="card" aria-labelledby="expenses-title">
+      <h2 id="expenses-title">Einzelne Ausgaben</h2>
+      <div id="expenseList" class="expense-list"></div>
+      <div class="footer-actions">
+        <button class="secondary" id="exportButton" type="button">Daten exportieren</button>
+        <button class="danger" id="resetButton" type="button">Alles zurücksetzen</button>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const STORAGE_KEY = "mein-budget-tracker-v1";
+    const categories = ["Supermarkt", "Drogerie", "Restaurant/Bäcker", "Baumarkt", "Sonstiges"];
+
+    const budgetInput = document.getElementById("budgetInput");
+    const budgetDisplay = document.getElementById("budgetDisplay");
+    const spentDisplay = document.getElementById("spentDisplay");
+    const remainingDisplay = document.getElementById("remainingDisplay");
+    const remainingBox = document.getElementById("remainingBox");
+    const expenseForm = document.getElementById("expenseForm");
+    const categoryInput = document.getElementById("categoryInput");
+    const amountInput = document.getElementById("amountInput");
+    const noteInput = document.getElementById("noteInput");
+    const categoryTotals = document.getElementById("categoryTotals");
+    const expenseList = document.getElementById("expenseList");
+    const resetButton = document.getElementById("resetButton");
+    const exportButton = document.getElementById("exportButton");
+
+    let state = loadState();
+
+    function parseEuro(value) {
+      if (typeof value === "number") return value;
+      const normalized = String(value)
+        .trim()
+        .replace(/\./g, "")
+        .replace(",", ".");
+      const number = Number(normalized);
+      return Number.isFinite(number) ? number : 0;
+    }
+
+    function formatEuro(value) {
+      return new Intl.NumberFormat("de-DE", {
+        style: "currency",
+        currency: "EUR"
+      }).format(value);
+    }
+
+    function loadState() {
+      const fallback = { budget: 937.14, expenses: [] };
+      try {
+        const saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
+        if (!saved) return fallback;
+        return {
+          budget: Number.isFinite(saved.budget) ? saved.budget : fallback.budget,
+          expenses: Array.isArray(saved.expenses) ? saved.expenses : []
+        };
+      } catch {
+        return fallback;
+      }
+    }
+
+    function saveState() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    }
+
+    function calculateTotals() {
+      const spent = state.expenses.reduce((sum, expense) => sum + expense.amount, 0);
+      const remaining = state.budget - spent;
+      const totalsByCategory = Object.fromEntries(categories.map(category => [category, 0]));
+
+      for (const expense of state.expenses) {
+        totalsByCategory[expense.category] = (totalsByCategory[expense.category] || 0) + expense.amount;
+      }
+
+      return { spent, remaining, totalsByCategory };
+    }
+
+    function render() {
+      budgetInput.value = state.budget.toLocaleString("de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+      const { spent, remaining, totalsByCategory } = calculateTotals();
+
+      budgetDisplay.textContent = formatEuro(state.budget);
+      spentDisplay.textContent = formatEuro(spent);
+      remainingDisplay.textContent = formatEuro(remaining);
+
+      remainingBox.classList.remove("good", "warning", "bad");
+      if (remaining < 0) {
+        remainingBox.classList.add("bad");
+      } else if (remaining < state.budget * 0.2) {
+        remainingBox.classList.add("warning");
+      } else {
+        remainingBox.classList.add("good");
+      }
+
+      categoryTotals.innerHTML = categories.map(category => `
+        <div class="category-row">
+          <span class="name">${category}</span>
+          <span class="amount">${formatEuro(totalsByCategory[category] || 0)}</span>
+        </div>
+      `).join("");
+
+      if (state.expenses.length === 0) {
+        expenseList.innerHTML = `<div class="empty">Noch keine Ausgaben eingetragen.</div>`;
+        return;
+      }
+
+      expenseList.innerHTML = state.expenses
+        .slice()
+        .reverse()
+        .map(expense => `
+          <article class="expense-item">
+            <div>
+              <div class="expense-title">${escapeHtml(expense.category)}</div>
+              <div class="expense-meta">${escapeHtml(expense.note || "Ohne Notiz")} · ${escapeHtml(expense.date)}</div>
+              <button class="delete-small" type="button" data-delete-id="${expense.id}">Löschen</button>
+            </div>
+            <div class="expense-amount">− ${formatEuro(expense.amount)}</div>
+          </article>
+        `).join("");
+    }
+
+    function escapeHtml(text) {
+      return String(text)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
+
+    budgetInput.addEventListener("change", () => {
+      state.budget = parseEuro(budgetInput.value);
+      saveState();
+      render();
+    });
+
+    expenseForm.addEventListener("submit", event => {
+      event.preventDefault();
+      const amount = parseEuro(amountInput.value);
+
+      if (amount <= 0) {
+        alert("Bitte gib einen Betrag größer als 0 ein.");
+        return;
+      }
+
+      state.expenses.push({
+        id: crypto.randomUUID ? crypto.randomUUID() : String(Date.now()),
+        category: categoryInput.value,
+        amount,
+        note: noteInput.value.trim(),
+        date: new Date().toLocaleDateString("de-DE")
+      });
+
+      amountInput.value = "";
+      noteInput.value = "";
+      amountInput.focus();
+      saveState();
+      render();
+    });
+
+    expenseList.addEventListener("click", event => {
+      const button = event.target.closest("[data-delete-id]");
+      if (!button) return;
+
+      const id = button.getAttribute("data-delete-id");
+      state.expenses = state.expenses.filter(expense => expense.id !== id);
+      saveState();
+      render();
+    });
+
+    resetButton.addEventListener("click", () => {
+      const confirmed = confirm("Wirklich alle Ausgaben löschen und das Budget auf 937,14 € zurücksetzen?");
+      if (!confirmed) return;
+
+      state = { budget: 937.14, expenses: [] };
+      saveState();
+      render();
+    });
+
+    exportButton.addEventListener("click", async () => {
+      const { spent, remaining, totalsByCategory } = calculateTotals();
+      const lines = [
+        "Mein Budget",
+        `Budget: ${formatEuro(state.budget)}`,
+        `Ausgegeben: ${formatEuro(spent)}`,
+        `Restbudget: ${formatEuro(remaining)}`,
+        "",
+        "Ausgaben nach Kategorie:",
+        ...categories.map(category => `${category}: ${formatEuro(totalsByCategory[category] || 0)}`),
+        "",
+        "Einzelne Ausgaben:",
+        ...state.expenses.map(expense => `${expense.date}; ${expense.category}; ${formatEuro(expense.amount)}; ${expense.note || ""}`)
+      ];
+
+      const text = lines.join("\n");
+
+      if (navigator.share) {
+        try {
+          await navigator.share({ title: "Mein Budget", text });
+          return;
+        } catch {
+          // Falls Teilen abgebrochen wird, weiter mit Zwischenablage.
+        }
+      }
+
+      await navigator.clipboard.writeText(text);
+      alert("Budgetübersicht wurde in die Zwischenablage kopiert.");
+    });
+
+    render();
+  </script>
+</body>
+</html>
